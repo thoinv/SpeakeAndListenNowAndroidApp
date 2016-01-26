@@ -233,7 +233,12 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
             @Override
             public void onRecordSaveError() {
                 LogUtils.log("@onRecordSaveError");
-                NotificationUtils.showInfoDialog(MainActivity.this, getString(R.string.saveRecordError));
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        NotificationUtils.showInfoDialog(MainActivity.this, getString(R.string.saveRecordError));
+                    }
+                });
             }
         });
         recordingThread.start();
