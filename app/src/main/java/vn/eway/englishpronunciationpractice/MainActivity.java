@@ -22,7 +22,10 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import vn.english.tools.speak.instance.R;
+import vn.eway.englishpronunciationpractice.ui.ads.BannerAds;
+import vn.eway.englishpronunciationpractice.ui.ads.InterstitialAd;
 import vn.eway.englishpronunciationpractice.utils.LogUtils;
+import vn.eway.englishpronunciationpractice.utils.MySharedPreferences;
 import vn.eway.englishpronunciationpractice.utils.NotificationUtils;
 import vn.eway.englishpronunciationpractice.utils.StorageUtils;
 import vn.eway.englishpronunciationpractice.utils.helper.CircleImageView;
@@ -36,7 +39,7 @@ import vn.eway.englishpronunciationpractice.utils.helper.recorder.visualizer.ren
 public class MainActivity extends AppCompatActivity implements View.OnTouchListener{
     private CircleImageView btnRecord;
     private TextView txtRecord;
-    private AdView adView;
+    private BannerAds adView;
     private AudioRecordingThread recordingThread;
     private String fileName;
     private VisualizerView visualizerView;
@@ -65,11 +68,8 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         txtRecord.setClickable(true);
         txtRecord.setOnTouchListener(this);
 
-        adView = (AdView)findViewById(R.id.adView);
-        AdRequest adRequest = new AdRequest.Builder()
-                .addTestDevice(AdRequest.DEVICE_ID_EMULATOR)
-                .build();
-        adView.loadAd(adRequest);
+        adView = (BannerAds)findViewById(R.id.adView);
+        adView.loadAd();
 
         visualizerView = (VisualizerView) findViewById(R.id.visualizeView);
         setupVisualizer();
@@ -181,6 +181,25 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
             @Override
             public void onRecordSuccess() {
                 LogUtils.log("@onRecordSuccess");
+
+                MySharedPreferences.getInstance(MainActivity.this).countNumberOfRecordAction();
+
+                int numberOfRecordAction = MySharedPreferences.getInstance(MainActivity.this).getNumberOfRecordAction();
+                LogUtils.log("@numberOfRecordAction: " + numberOfRecordAction);
+
+                if (numberOfRecordAction >= AppConfigs.MAX_NUMBER_OF_RECORD_ACTION) {
+                    LogUtils.log("--> display fullscreen ads");
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            InterstitialAd interstitialAd = new InterstitialAd(MainActivity.this);
+                            interstitialAd.requestNewInterstitial();
+                        }
+                    });
+
+                    MySharedPreferences.getInstance(MainActivity.this).resetNumberOfRecordAction();
+                }
+
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
